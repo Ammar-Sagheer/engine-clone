@@ -182,15 +182,16 @@ export default function ProductDetail({ product }) {
             {matchedVariant?.available ? "Add to Cart" : "Sold Out"}
           </button>
 
-          {product.body_html && (
+          {product.description?.length > 0 && (
             <div className="mt-10 pt-8 border-t border-line">
               <h2 className="text-[11px] font-semibold tracking-[0.16em] uppercase mb-4">
                 Details
               </h2>
-              <div
-                className="text-[13px] text-muted leading-relaxed [&_p]:mb-3 [&_strong]:text-foreground"
-                dangerouslySetInnerHTML={{ __html: product.body_html }}
-              />
+              <ul className="text-[13px] text-muted leading-relaxed space-y-1.5">
+                {product.description.map((line, i) => (
+                  <li key={i}>{line}</li>
+                ))}
+              </ul>
             </div>
           )}
         </div>

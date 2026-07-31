@@ -29,13 +29,46 @@ const MAX_PAGES = argValue("pages", 60);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const ENTITIES = {
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#39;": "'",
+  "&apos;": "'",
+  "&nbsp;": " ",
+};
+
+/**
+ * Converts the feed's body_html into plain text lines.
+ *
+ * We deliberately do NOT store raw HTML: truncating markup mid-tag produces
+ * invalid HTML that the browser's parser silently repairs, so the server DOM
+ * and React's client DOM disagree and hydration fails. Plain text is safe to
+ * truncate and renders without dangerouslySetInnerHTML.
+ */
+function toLines(html) {
+  const text = (html || "")
+    .replace(/<\s*br\s*\/?>/gi, "\n")
+    .replace(/<\/\s*(p|div|li|ul|h[1-6])\s*>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&[a-z#0-9]+;/gi, (m) => ENTITIES[m.toLowerCase()] ?? " ");
+
+  return text
+    .split("\n")
+    .map((line) => line.replace(/\s+/g, " ").replace(/^[•●○*-]\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 12)
+    .map((line) => (line.length > 200 ? line.slice(0, 200) + "…" : line));
+}
+
 /** Keep only the fields the storefront actually renders. */
 function slim(p) {
   return {
     id: p.id,
     title: p.title,
     handle: p.handle,
-    body_html: (p.body_html || "").slice(0, 400),
+    description: toLines(p.body_html),
     created_at: p.created_at,
     product_type: p.product_type,
     tags: p.tags || [],
