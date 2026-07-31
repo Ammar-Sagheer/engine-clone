@@ -2,17 +2,32 @@ import fallbackData from "@/_data/products-fallback.json";
 
 const STORE_URL = "https://engine.com.pk";
 
+const FETCH_TIMEOUT_MS = 4000;
+
+/**
+ * fetch() never times out on its own — if the network stalls (blocked,
+ * filtered, or just slow) instead of returning an error or a 429, a plain
+ * fetch() hangs forever and so does the page. Abort it ourselves.
+ */
+function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() =>
+    clearTimeout(timer)
+  );
+}
+
 /**
  * Shopify's storefront JSON endpoints rate-limit aggressively (429) when
  * hit repeatedly in a short window, which happens easily in Next dev mode
  * since `next: { revalidate }` isn't honored the same way it is in prod.
  * Retry with backoff, honoring Retry-After when present.
  */
-async function fetchWithRetry(url, options = {}, retries = 3) {
+async function fetchWithRetry(url, options = {}, retries = 2) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     let res;
     try {
-      res = await fetch(url, options);
+      res = await fetchWithTimeout(url, options);
     } catch (err) {
       if (attempt === retries) throw err;
       await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
