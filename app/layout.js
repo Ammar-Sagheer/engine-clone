@@ -2,6 +2,7 @@ import { Jost } from "next/font/google";
 import "./globals.css";
 import Header from "@/_components/Header";
 import Footer from "@/_components/Footer";
+import CartDrawer from "@/_components/CartDrawer";
 import { CartProvider } from "@/_context/CartContext";
 
 const jost = Jost({
@@ -23,6 +24,7 @@ export default function RootLayout({ children }) {
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <CartDrawer />
         </CartProvider>
       </body>
     </html>

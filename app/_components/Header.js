@@ -15,7 +15,7 @@ const NAV_LINKS = [
 ];
 
 export default function Header() {
-  const { count } = useCart();
+  const { count, openCart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
 
@@ -69,9 +69,9 @@ export default function Header() {
           >
             <SearchIcon />
           </Link>
-          <Link
-            href="/cart"
-            aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`}
+          <button
+            onClick={openCart}
+            aria-label={`Open cart, ${count} item${count === 1 ? "" : "s"}`}
             className="relative hover:opacity-60 transition-opacity"
           >
             <BagIcon />
@@ -80,7 +80,7 @@ export default function Header() {
                 {count}
               </span>
             )}
-          </Link>
+          </button>
         </div>
       </div>
 

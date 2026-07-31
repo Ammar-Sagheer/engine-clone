@@ -2,11 +2,10 @@ import Link from "next/link";
 import SubcategoryRow from "@/_components/SubcategoryRow";
 import { SUBCATEGORIES } from "@/_lib/subcategories";
 import { ArrowRightIcon } from "@/_components/Icons";
+import { bannerImage } from "@/_lib/images";
 
 export default function KidsGateway({ gender, title, products }) {
-  const banner = products.find(
-    (p) => (p.product_type || "").toLowerCase() === gender && p.images?.length
-  )?.images?.[0]?.src;
+  const banner = bannerImage(products, gender);
 
   return (
     <>

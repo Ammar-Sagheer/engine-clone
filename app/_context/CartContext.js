@@ -1,54 +1,122 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 const CartContext = createContext(null);
 const STORAGE_KEY = "engine-clone-cart";
 
-function readInitialCart() {
-  if (typeof window === "undefined") return [];
+/**
+ * The cart lives in localStorage, which the server can't see. Reading it
+ * during the first client render is what caused the hydration mismatch
+ * (server said 0 items, client said 4). useSyncExternalStore is built for
+ * this: React renders `getServerSnapshot` during hydration, then swaps to
+ * the real snapshot immediately afterwards — no mismatch, no flash of
+ * stale markup that we'd have to paper over with a `mounted` flag.
+ */
+const EMPTY = [];
+
+let cache = EMPTY;
+let loaded = false;
+const listeners = new Set();
+
+function readStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? parsed : EMPTY;
   } catch {
-    return [];
+    return EMPTY;
   }
 }
 
+function getSnapshot() {
+  if (!loaded) {
+    cache = readStorage();
+    loaded = true;
+  }
+  // Must be referentially stable between renders or React loops forever.
+  return cache;
+}
+
+function getServerSnapshot() {
+  return EMPTY;
+}
+
+function emit() {
+  listeners.forEach((listener) => listener());
+}
+
+function subscribe(listener) {
+  listeners.add(listener);
+
+  // Keep other tabs in sync.
+  const onStorage = (e) => {
+    if (e.key === STORAGE_KEY) {
+      loaded = false;
+      emit();
+    }
+  };
+  window.addEventListener("storage", onStorage);
+
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function commit(next) {
+  cache = next;
+  loaded = true;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // storage full or unavailable — keep the in-memory cart working
+  }
+  emit();
+}
+
 export function CartProvider({ children }) {
-  const [items, setItems] = useState(readInitialCart);
+  const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+  const openCart = useCallback(() => setIsOpen(true), []);
+  const closeCart = useCallback(() => setIsOpen(false), []);
 
-  function addItem(item) {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.variantId === item.variantId);
-      if (existing) {
-        return prev.map((i) =>
-          i.variantId === item.variantId
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i
-        );
-      }
-      return [...prev, item];
-    });
-  }
+  const addItem = useCallback((item) => {
+    const current = getSnapshot();
+    const existing = current.find((i) => i.variantId === item.variantId);
 
-  function removeItem(variantId) {
-    setItems((prev) => prev.filter((i) => i.variantId !== variantId));
-  }
-
-  function updateQuantity(variantId, quantity) {
-    setItems((prev) =>
-      prev.map((i) => (i.variantId === variantId ? { ...i, quantity } : i))
+    commit(
+      existing
+        ? current.map((i) =>
+            i.variantId === item.variantId
+              ? { ...i, quantity: i.quantity + item.quantity }
+              : i
+          )
+        : [...current, item]
     );
-  }
+  }, []);
 
-  function clearCart() {
-    setItems([]);
-  }
+  const removeItem = useCallback((variantId) => {
+    commit(getSnapshot().filter((i) => i.variantId !== variantId));
+  }, []);
+
+  const updateQuantity = useCallback((variantId, quantity) => {
+    commit(
+      getSnapshot().map((i) =>
+        i.variantId === variantId ? { ...i, quantity } : i
+      )
+    );
+  }, []);
+
+  const clearCart = useCallback(() => commit(EMPTY), []);
 
   const count = useMemo(
     () => items.reduce((sum, i) => sum + i.quantity, 0),
@@ -60,13 +128,34 @@ export function CartProvider({ children }) {
     [items]
   );
 
-  return (
-    <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, count, subtotal }}
-    >
-      {children}
-    </CartContext.Provider>
+  const value = useMemo(
+    () => ({
+      items,
+      addItem,
+      removeItem,
+      updateQuantity,
+      clearCart,
+      count,
+      subtotal,
+      isOpen,
+      openCart,
+      closeCart,
+    }),
+    [
+      items,
+      addItem,
+      removeItem,
+      updateQuantity,
+      clearCart,
+      count,
+      subtotal,
+      isOpen,
+      openCart,
+      closeCart,
+    ]
   );
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {

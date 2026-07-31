@@ -9,8 +9,7 @@ import { useCart } from "@/_context/CartContext";
 export default function ProductDetail({ product }) {
   const images = product.images || [];
   const [activeImage, setActiveImage] = useState(0);
-  const [added, setAdded] = useState(false);
-  const { addItem } = useCart();
+  const { addItem, openCart } = useCart();
 
   const optionNames = useMemo(
     () => product.options?.map((o) => o.name) || [],
@@ -64,8 +63,7 @@ export default function ProductDetail({ product }) {
       image: images[0]?.src,
       quantity: 1,
     });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    openCart();
   }
 
   const category = (product.product_type || "").toLowerCase();
@@ -181,11 +179,7 @@ export default function ProductDetail({ product }) {
             disabled={!matchedVariant?.available}
             className="btn btn-primary w-full mt-9"
           >
-            {!matchedVariant?.available
-              ? "Sold Out"
-              : added
-                ? "Added to Cart"
-                : "Add to Cart"}
+            {matchedVariant?.available ? "Add to Cart" : "Sold Out"}
           </button>
 
           {product.body_html && (

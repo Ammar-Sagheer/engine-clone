@@ -2,6 +2,7 @@ import Link from "next/link";
 import ProductCard from "@/_components/ProductCard";
 import { getAllProducts, filterProductsByCategory } from "@/_lib/shopify";
 import { SUBCATEGORIES } from "@/_lib/subcategories";
+import { pickImage } from "@/_lib/images";
 
 export const revalidate = 3600;
 
@@ -32,31 +33,39 @@ export default async function CollectionPage({ params, searchParams }) {
 
   const subcategories = SUBCATEGORIES[category] || [];
 
+  const banner = filtered[0]?.images?.[0]?.src ?? pickImage(category, products);
+
   return (
-    <div className="container-page py-10 md:py-14">
-      <nav className="text-[11px] tracking-[0.14em] uppercase text-muted mb-6">
-        <Link href="/" className="hover:text-foreground transition-colors">
-          Home
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-foreground">{titleCase(category)}</span>
-        {tag && (
-          <>
-            <span className="mx-2">/</span>
-            <span className="text-foreground">{tag}</span>
-          </>
+    <>
+      <section className="relative bg-[#111] text-white overflow-hidden">
+        {banner && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={banner}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-top opacity-50"
+          />
         )}
-      </nav>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
+        <div className="container-page relative py-14 md:py-20">
+          <nav className="text-[11px] tracking-[0.14em] uppercase text-white/60 mb-4">
+            <Link href="/" className="hover:text-white transition-colors">
+              Home
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-white">{titleCase(category)}</span>
+          </nav>
+          <h1 className="text-3xl md:text-5xl font-semibold tracking-tight">
+            {tag || titleCase(category)}
+          </h1>
+          <p className="text-[13px] text-white/70 mt-3">
+            {filtered.length} {filtered.length === 1 ? "product" : "products"}
+          </p>
+        </div>
+      </section>
 
-      <header className="border-b border-line pb-6 mb-8">
-        <h1 className="text-2xl md:text-4xl font-semibold tracking-tight">
-          {tag || titleCase(category)}
-        </h1>
-        <p className="text-[13px] text-muted mt-2">
-          {filtered.length} {filtered.length === 1 ? "product" : "products"}
-        </p>
-      </header>
-
+      <div className="container-page py-8 md:py-12">
       {subcategories.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-10">
           <Link
@@ -102,6 +111,7 @@ export default async function CollectionPage({ params, searchParams }) {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

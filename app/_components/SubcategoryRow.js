@@ -1,14 +1,6 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@/_components/Icons";
-
-function findTileImage(products, gender, tag) {
-  const match = products.find(
-    (p) =>
-      (p.product_type || "").toLowerCase() === gender &&
-      (p.tags || []).some((t) => t.toLowerCase().includes(tag.toLowerCase()))
-  );
-  return match?.images?.[0]?.src;
-}
+import { subcategoryImage } from "@/_lib/images";
 
 export default function SubcategoryRow({
   title,
@@ -39,7 +31,7 @@ export default function SubcategoryRow({
 
       <div className="rail no-scrollbar -mx-5 px-5 md:-mx-10 md:px-10">
         {subcategories.map((sub) => {
-          const image = findTileImage(products, gender, sub.tag);
+          const image = subcategoryImage(products, gender, sub.tag);
           return (
             <Link
               key={sub.name}
