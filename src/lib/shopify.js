@@ -1,11 +1,31 @@
 const STORE_URL = "https://engine.com.pk";
 
 /**
+ * Shopify's storefront JSON endpoints rate-limit aggressively (429) when
+ * hit repeatedly in a short window, which happens easily in Next dev mode
+ * since `next: { revalidate }` isn't honored the same way it is in prod.
+ * Retry with backoff, honoring Retry-After when present.
+ */
+async function fetchWithRetry(url, options = {}, retries = 4) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(url, options);
+
+    if (res.status !== 429) return res;
+
+    if (attempt === retries) return res;
+
+    const retryAfter = Number(res.headers.get("retry-after"));
+    const waitMs = retryAfter > 0 ? retryAfter * 1000 : 500 * 2 ** attempt;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+  }
+}
+
+/**
  * Fetches products from the public Shopify storefront JSON endpoint.
  * https://shopify.dev/docs/api/ajax/reference/product#endpoints
  */
 export async function getProducts({ limit = 250, page = 1 } = {}) {
-  const res = await fetch(
+  const res = await fetchWithRetry(
     `${STORE_URL}/products.json?limit=${limit}&page=${page}`,
     { next: { revalidate: 3600 } }
   );
@@ -18,7 +38,17 @@ export async function getProducts({ limit = 250, page = 1 } = {}) {
   return data.products;
 }
 
+// Module-level cache so repeated calls within the same server process
+// (e.g. every route hit during `next dev`) don't re-fetch all pages.
+let allProductsCache = null;
+let allProductsCacheAt = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
 export async function getAllProducts() {
+  if (allProductsCache && Date.now() - allProductsCacheAt < CACHE_TTL_MS) {
+    return allProductsCache;
+  }
+
   const all = [];
   let page = 1;
 
@@ -28,13 +58,17 @@ export async function getAllProducts() {
     if (products.length < 250) break;
     page += 1;
     if (page > 10) break;
+    // small gap between page requests to stay under the rate limit
+    await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
+  allProductsCache = all;
+  allProductsCacheAt = Date.now();
   return all;
 }
 
 export async function getProductByHandle(handle) {
-  const res = await fetch(`${STORE_URL}/products/${handle}.json`, {
+  const res = await fetchWithRetry(`${STORE_URL}/products/${handle}.json`, {
     next: { revalidate: 3600 },
   });
 
