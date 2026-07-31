@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { getProductPrice, formatPrice } from "@/_lib/shopify";
+import { getProductPrice, formatPrice } from "@/_lib/format";
 import { styleLabel } from "@/_lib/subcategories";
 import { useCart } from "@/_context/CartContext";
 

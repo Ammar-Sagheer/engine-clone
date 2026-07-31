@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/_context/CartContext";
-import { formatPrice } from "@/_lib/shopify";
+import { formatPrice } from "@/_lib/format";
 import { BagIcon } from "@/_components/Icons";
 
 export default function CartPage() {

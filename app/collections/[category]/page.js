@@ -1,10 +1,13 @@
 import Link from "next/link";
 import ProductCard from "@/_components/ProductCard";
-import { getAllProducts, filterProductsByCategory } from "@/_lib/shopify";
+import { getAllProducts } from "@/_lib/shopify";
+import { filterProductsByCategory } from "@/_lib/format";
 import { SUBCATEGORIES } from "@/_lib/subcategories";
 import { pickImage } from "@/_lib/images";
 
 export const revalidate = 3600;
+
+const PAGE_SIZE = 48;
 
 function titleCase(str) {
   return str
@@ -15,14 +18,14 @@ function titleCase(str) {
 
 export default async function CollectionPage({ params, searchParams }) {
   const { category } = await params;
-  const { tag } = await searchParams;
+  const { tag, page } = await searchParams;
   const products = await getAllProducts();
 
   let filtered =
     category === "new-in"
-      ? [...products]
-          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-          .slice(0, 40)
+      ? [...products].sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        )
       : filterProductsByCategory(products, category);
 
   if (tag) {
@@ -31,9 +34,23 @@ export default async function CollectionPage({ params, searchParams }) {
     );
   }
 
-  const subcategories = SUBCATEGORIES[category] || [];
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const current = Math.min(Math.max(Number(page) || 1, 1), totalPages);
+  const visible = filtered.slice(
+    (current - 1) * PAGE_SIZE,
+    current * PAGE_SIZE
+  );
 
+  const subcategories = SUBCATEGORIES[category] || [];
   const banner = filtered[0]?.images?.[0]?.src ?? pickImage(category, products);
+
+  const hrefFor = (nextPage) => {
+    const qs = new URLSearchParams();
+    if (tag) qs.set("tag", tag);
+    if (nextPage > 1) qs.set("page", String(nextPage));
+    const query = qs.toString();
+    return `/collections/${category}${query ? `?${query}` : ""}`;
+  };
 
   return (
     <>
@@ -66,51 +83,79 @@ export default async function CollectionPage({ params, searchParams }) {
       </section>
 
       <div className="container-page py-8 md:py-12">
-      {subcategories.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-10">
-          <Link
-            href={`/collections/${category}`}
-            className={`px-4 py-2 text-[12px] tracking-[0.1em] uppercase border transition-colors ${
-              !tag
-                ? "bg-foreground text-white border-foreground"
-                : "border-line hover:border-foreground"
-            }`}
-          >
-            All
-          </Link>
-          {subcategories.map((sub) => {
-            const active = tag === sub.tag;
-            return (
-              <Link
-                key={sub.name}
-                href={`/collections/${category}?tag=${encodeURIComponent(sub.tag)}`}
-                className={`px-4 py-2 text-[12px] tracking-[0.1em] uppercase border transition-colors ${
-                  active
-                    ? "bg-foreground text-white border-foreground"
-                    : "border-line hover:border-foreground"
-                }`}
-              >
-                {sub.name}
-              </Link>
-            );
-          })}
-        </div>
-      )}
+        {subcategories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-10">
+            <Link
+              href={`/collections/${category}`}
+              className={`px-4 py-2 text-[12px] tracking-[0.1em] uppercase border transition-colors ${
+                !tag
+                  ? "bg-foreground text-white border-foreground"
+                  : "border-line hover:border-foreground"
+              }`}
+            >
+              All
+            </Link>
+            {subcategories.map((sub) => {
+              const active = tag === sub.tag;
+              return (
+                <Link
+                  key={sub.name}
+                  href={`/collections/${category}?tag=${encodeURIComponent(sub.tag)}`}
+                  className={`px-4 py-2 text-[12px] tracking-[0.1em] uppercase border transition-colors ${
+                    active
+                      ? "bg-foreground text-white border-foreground"
+                      : "border-line hover:border-foreground"
+                  }`}
+                >
+                  {sub.name}
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
-      {filtered.length === 0 ? (
-        <div className="py-20 text-center">
-          <p className="text-muted mb-6">No products found in this collection.</p>
-          <Link href="/" className="btn btn-primary">
-            Continue Shopping
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
+        {visible.length === 0 ? (
+          <div className="py-20 text-center">
+            <p className="text-muted mb-6">
+              No products found in this collection.
+            </p>
+            <Link href="/" className="btn btn-primary">
+              Continue Shopping
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
+              {visible.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <nav className="flex items-center justify-center gap-3 mt-14">
+                {current > 1 && (
+                  <Link
+                    href={hrefFor(current - 1)}
+                    className="px-4 py-2 text-[12px] tracking-[0.1em] uppercase border border-line hover:border-foreground transition-colors"
+                  >
+                    Prev
+                  </Link>
+                )}
+                <span className="text-[12px] tracking-[0.1em] uppercase text-muted">
+                  Page {current} of {totalPages}
+                </span>
+                {current < totalPages && (
+                  <Link
+                    href={hrefFor(current + 1)}
+                    className="px-4 py-2 text-[12px] tracking-[0.1em] uppercase border border-line hover:border-foreground transition-colors"
+                  >
+                    Next
+                  </Link>
+                )}
+              </nav>
+            )}
+          </>
+        )}
       </div>
     </>
   );

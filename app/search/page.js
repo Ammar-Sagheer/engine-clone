@@ -1,31 +1,40 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import ProductCard from "@/_components/ProductCard";
 import { SearchIcon } from "@/_components/Icons";
-import { getAllProducts } from "@/_lib/shopify";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
-  const [products, setProducts] = useState([]);
+  const [results, setResults] = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Debounced so typing doesn't fire a request per keystroke.
   useEffect(() => {
-    getAllProducts()
-      .then(setProducts)
-      .finally(() => setLoading(false));
-  }, []);
+    const controller = new AbortController();
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        (p.product_type || "").toLowerCase().includes(q) ||
-        (p.tags || []).some((t) => t.toLowerCase().includes(q))
-    );
-  }, [products, query]);
+    const timer = setTimeout(() => {
+      setLoading(true);
+      fetch(`/api/products?q=${encodeURIComponent(query)}&limit=48`, {
+        signal: controller.signal,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setResults(data.products);
+          setTotal(data.total);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") setLoading(false);
+        });
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query]);
 
   return (
     <div className="container-page py-10 md:py-14">
@@ -49,24 +58,22 @@ export default function SearchPage() {
 
       {loading ? (
         <p className="text-center text-muted text-sm py-16">Loading…</p>
+      ) : results.length === 0 ? (
+        <p className="text-center text-muted text-sm py-16">
+          Nothing matched that search. Try another term.
+        </p>
       ) : (
         <>
           <p className="text-[13px] text-muted mb-8">
-            {filtered.length} {filtered.length === 1 ? "product" : "products"}
+            Showing {results.length} of {total}{" "}
+            {total === 1 ? "product" : "products"}
             {query.trim() && ` for “${query.trim()}”`}
           </p>
-
-          {filtered.length === 0 ? (
-            <p className="text-center text-muted text-sm py-16">
-              Nothing matched that search. Try another term.
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
-              {filtered.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
+            {results.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </>
       )}
     </div>

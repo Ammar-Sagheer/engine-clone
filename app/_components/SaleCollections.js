@@ -4,16 +4,16 @@ import Link from "next/link";
 import { useState } from "react";
 import ProductCard from "@/_components/ProductCard";
 import { ArrowRightIcon } from "@/_components/Icons";
-import { CATEGORIES } from "@/_lib/shopify";
+import { CATEGORIES } from "@/_lib/format";
 
-export default function SaleCollections({ products }) {
+/**
+ * `collections` is a small precomputed { category: products[] } map. The page
+ * deliberately doesn't pass the whole catalogue here — everything a client
+ * component receives is serialised into the RSC payload sent to the browser.
+ */
+export default function SaleCollections({ collections }) {
   const [active, setActive] = useState(CATEGORIES[0]);
-
-  const items = products.filter(
-    (p) =>
-      (p.product_type || "").toLowerCase() === active.toLowerCase() &&
-      (p.tags || []).some((t) => t.toLowerCase() === "sale")
-  );
+  const items = collections[active] || [];
 
   return (
     <section className="container-page py-14 md:py-20">
@@ -22,13 +22,15 @@ export default function SaleCollections({ products }) {
         <h2 className="section-title mt-2">Featured Collections</h2>
       </div>
 
-      <div className="flex justify-center gap-8 border-b border-line mb-8">
+      <div className="flex justify-center gap-6 sm:gap-8 border-b border-line mb-8">
         {CATEGORIES.map((category) => (
           <button
             key={category}
             onClick={() => setActive(category)}
             className={`relative pb-4 text-[13px] font-medium tracking-[0.12em] uppercase transition-colors ${
-              active === category ? "text-foreground" : "text-muted hover:text-foreground"
+              active === category
+                ? "text-foreground"
+                : "text-muted hover:text-foreground"
             }`}
           >
             {category}

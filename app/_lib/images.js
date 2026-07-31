@@ -1,9 +1,7 @@
-import fallbackData from "@/_data/products-fallback.json";
-
-/** Every product image we know about, used to fill tiles that have no match. */
-const POOL = fallbackData.products.flatMap((p) =>
-  (p.images || []).map((img) => img.src)
-);
+/**
+ * Image helpers. Deliberately imports no data — callers pass the products
+ * they already have, so this stays safe for client components.
+ */
 
 /**
  * djb2 — a tiny string hash. Picking images has to be deterministic rather
@@ -18,17 +16,15 @@ function hash(seed) {
   return Math.abs(h);
 }
 
-/**
- * Returns a stable image for `seed`, drawn from the given products when
- * possible and otherwise from the full pool. Never returns undefined as
- * long as any product has an image.
- */
+/** A stable image for `seed`, drawn from the given products. */
 export function pickImage(seed, products) {
-  const pool =
-    products?.flatMap((p) => (p.images || []).map((img) => img.src)) || [];
-  const source = pool.length > 0 ? pool : POOL;
-  if (source.length === 0) return null;
-  return source[hash(seed) % source.length];
+  if (!products?.length) return null;
+
+  const withImages = products.filter((p) => p.images?.length);
+  if (withImages.length === 0) return null;
+
+  const product = withImages[hash(seed) % withImages.length];
+  return product.images[0].src;
 }
 
 /**
@@ -45,13 +41,13 @@ export function subcategoryImage(products, gender, tag) {
   return match?.images?.[0]?.src ?? pickImage(`${gender}-${tag}`, products);
 }
 
-/** Wide-ish banner image for a gender section. */
+/** Banner image for a gender section. */
 export function bannerImage(products, gender) {
-  const match = products.find(
+  const pool = products.filter(
     (p) => (p.product_type || "").toLowerCase() === gender && p.images?.length
   );
 
-  return match?.images?.[0]?.src ?? pickImage(`banner-${gender}`, products);
+  return pickImage(`banner-${gender}`, pool.length ? pool : products);
 }
 
 export function heroImage(products) {

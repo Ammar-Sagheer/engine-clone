@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useCart } from "@/_context/CartContext";
-import { formatPrice } from "@/_lib/shopify";
+import { formatPrice } from "@/_lib/format";
 import { CloseIcon, BagIcon } from "@/_components/Icons";
 
 export default function CartDrawer() {

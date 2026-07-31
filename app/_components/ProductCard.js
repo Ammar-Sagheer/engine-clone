@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { getProductPrice, formatPrice } from "@/_lib/shopify";
+import { getProductPrice, formatPrice } from "@/_lib/format";
 import { styleLabel } from "@/_lib/subcategories";
-import { pickImage } from "@/_lib/images";
 
 /**
  * Shared product tile. `compact` is used inside horizontal rails, where the
@@ -9,10 +8,7 @@ import { pickImage } from "@/_lib/images";
  */
 export default function ProductCard({ product, compact = false }) {
   const { price, compareAtPrice } = getProductPrice(product);
-  const images = product.images?.length
-    ? product.images
-    : [{ src: pickImage(product.handle) }];
-  const [primary, secondary] = images;
+  const [primary, secondary] = product.images || [];
   const variant = product.variants?.[0];
   const onSale = compareAtPrice && compareAtPrice > price;
   const discount = onSale ? Math.round((1 - price / compareAtPrice) * 100) : 0;
