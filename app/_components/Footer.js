@@ -20,6 +20,14 @@ const COMPANY_LINKS = [
   { label: "Blog", href: "/blogs/news" },
 ];
 
+const SHOP_LINKS = [
+  { label: "New In", href: "/collections/new-in" },
+  { label: "Men", href: "/collections/men" },
+  { label: "Women", href: "/collections/women" },
+  { label: "Boys", href: "/collections/boys" },
+  { label: "Girls", href: "/collections/girls" },
+];
+
 const SOCIAL_LINKS = [
   { label: "Facebook", href: "https://facebook.com" },
   { label: "Instagram", href: "https://instagram.com" },
@@ -28,44 +36,50 @@ const SOCIAL_LINKS = [
   { label: "LinkedIn", href: "https://linkedin.com" },
 ];
 
+function LinkColumn({ heading, links }) {
+  return (
+    <div>
+      <h3 className="text-[11px] font-semibold tracking-[0.18em] uppercase mb-5">
+        {heading}
+      </h3>
+      <ul className="space-y-3 text-[13px] text-muted">
+        {links.map((l) => (
+          <li key={l.href}>
+            <Link href={l.href} className="hover:text-foreground transition-colors">
+              {l.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-black/10 bg-neutral-50">
-      <div className="container-page py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
-        <div>
-          <h3 className="font-semibold mb-4 text-sm tracking-wide">Support</h3>
-          <ul className="space-y-2 text-sm text-neutral-600">
-            {SUPPORT_LINKS.map((l) => (
-              <li key={l.href}>
-                <Link href={l.href} className="hover:text-black">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="font-semibold mb-4 text-sm tracking-wide">Company</h3>
-          <ul className="space-y-2 text-sm text-neutral-600">
-            {COMPANY_LINKS.map((l) => (
-              <li key={l.href}>
-                <Link href={l.href} className="hover:text-black">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+    <footer className="mt-20 border-t border-line">
+      <div className="container-page py-16 grid grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
+        <LinkColumn heading="Shop" links={SHOP_LINKS} />
+        <LinkColumn heading="Support" links={SUPPORT_LINKS} />
+        <LinkColumn heading="Company" links={COMPANY_LINKS} />
 
         <div className="col-span-2">
-          <h3 className="font-semibold mb-4 text-sm tracking-wide">
-            Stay in the loop
+          <h3 className="text-[11px] font-semibold tracking-[0.18em] uppercase mb-5">
+            Newsletter
           </h3>
+          <p className="text-[13px] text-muted mb-4 max-w-sm leading-relaxed">
+            Sign up for new arrivals, sale previews and style updates.
+          </p>
           <NewsletterForm />
-          <div className="flex gap-4 text-sm text-neutral-600">
+          <div className="flex flex-wrap gap-x-5 gap-y-2 mt-6 text-[12px] text-muted">
             {SOCIAL_LINKS.map((s) => (
-              <a key={s.href} href={s.href} target="_blank" rel="noreferrer">
+              <a
+                key={s.href}
+                href={s.href}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
                 {s.label}
               </a>
             ))}
@@ -73,9 +87,16 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-black/10 py-4 text-center text-xs text-neutral-500">
-        © {new Date().getFullYear()} Engine Clone — demo project, not affiliated
-        with the original brand.
+      <div className="border-t border-line">
+        <div className="container-page py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span className="text-xl font-bold tracking-[0.32em] pl-[0.32em]">
+            ENGINE
+          </span>
+          <p className="text-[11px] text-muted text-center sm:text-right">
+            © {new Date().getFullYear()} Engine Clone — demo project, not
+            affiliated with the original brand.
+          </p>
+        </div>
       </div>
     </footer>
   );

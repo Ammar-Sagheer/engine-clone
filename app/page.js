@@ -9,10 +9,11 @@ export const revalidate = 3600;
 
 export default async function HomePage() {
   const products = await getAllProducts();
+  const heroImage = products.find((p) => p.images?.length)?.images?.[0]?.src;
 
   return (
     <>
-      <Hero />
+      <Hero image={heroImage} />
       <SaleCollections products={products} />
       <SubcategoryRow
         title="Men's Collections"

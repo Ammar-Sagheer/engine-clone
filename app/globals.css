@@ -2,34 +2,155 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #111111;
-  --accent: #c9a227;
+  --foreground: #101010;
+  --muted: #6b6b6b;
+  --line: #e6e6e6;
+  --sale: #b3261e;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-sale: var(--sale);
   --font-sans: var(--font-sans);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 .container-page {
-  max-width: 1440px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
 }
 
 @media (min-width: 768px) {
   .container-page {
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-inline: 2.5rem;
   }
+}
+
+/* Section heading: small, wide-tracked, uppercase — the usual fashion-retail treatment */
+.eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 1.375rem;
+  }
+}
+
+/* Horizontal product rails scroll without an ugly scrollbar */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.rail {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: 0.5rem;
+}
+
+.rail > * {
+  scroll-snap-align: start;
+}
+
+/* Understated link underline that draws in on hover */
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+}
+
+.link-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Button: one base for shape/typography, colour comes from a variant class
+   so a variant never has to fight the base rule on specificity. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.9rem 2rem;
+  border: 1px solid transparent;
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--foreground);
+  color: #fff;
+}
+
+/* For dark backgrounds */
+.btn-invert {
+  background: #fff;
+  color: var(--foreground);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.btn-outline:hover {
+  background: #fff;
+  color: var(--foreground);
+  opacity: 1;
 }

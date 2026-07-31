@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRightIcon } from "@/_components/Icons";
 
 function findTileImage(products, gender, tag) {
   const match = products.find(
@@ -9,41 +10,58 @@ function findTileImage(products, gender, tag) {
   return match?.images?.[0]?.src;
 }
 
-export default function SubcategoryRow({ title, gender, subcategories, products }) {
+export default function SubcategoryRow({
+  title,
+  gender,
+  subcategories,
+  products,
+  bordered = true,
+}) {
   return (
-    <section className="container-page py-10">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg md:text-2xl font-semibold">{title}</h2>
-        <Link href={`/collections/${gender}`} className="text-sm underline underline-offset-4">
-          View all
+    <section
+      className={`container-page py-14 md:py-20 ${
+        bordered ? "border-t border-line" : ""
+      }`}
+    >
+      <div className="flex items-end justify-between mb-8">
+        <div>
+          <p className="eyebrow">Shop By Category</p>
+          <h2 className="section-title mt-2">{title}</h2>
+        </div>
+        <Link
+          href={`/collections/${gender}`}
+          className="hidden sm:inline-flex items-center gap-2 text-[12px] font-semibold tracking-[0.14em] uppercase link-underline shrink-0"
+        >
+          View All
+          <ArrowRightIcon />
         </Link>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-2">
+      <div className="rail no-scrollbar -mx-5 px-5 md:-mx-10 md:px-10">
         {subcategories.map((sub) => {
           const image = findTileImage(products, gender, sub.tag);
           return (
             <Link
               key={sub.name}
               href={`/collections/${gender}?tag=${encodeURIComponent(sub.tag)}`}
-              className="group block w-36 md:w-44 shrink-0"
+              className="group relative block w-[46vw] sm:w-60 shrink-0"
             >
-              <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden">
-                {image ? (
+              <div className="relative aspect-[3/4] bg-[#f4f4f4] overflow-hidden">
+                {image && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={image}
-                    alt={sub.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    alt=""
+                    aria-hidden="true"
                     loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-neutral-400 text-xs">
-                    {sub.name}
-                  </div>
                 )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                <span className="absolute inset-x-0 bottom-0 p-4 text-white text-[13px] font-semibold tracking-[0.12em] uppercase">
+                  {sub.name}
+                </span>
               </div>
-              <p className="text-sm font-medium text-center mt-2">{sub.name}</p>
             </Link>
           );
         })}
