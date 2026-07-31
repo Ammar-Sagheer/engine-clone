@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getProductPrice, formatPrice } from "@/lib/shopify";
+import { getProductPrice, formatPrice } from "@/_lib/shopify";
 
 export default function ProductCard({ product }) {
   const { price, compareAtPrice } = getProductPrice(product);

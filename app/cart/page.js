@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCart } from "@/context/CartContext";
-import { formatPrice } from "@/lib/shopify";
+import { useCart } from "@/_context/CartContext";
+import { formatPrice } from "@/_lib/shopify";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, subtotal } = useCart();

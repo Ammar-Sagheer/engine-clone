@@ -1,6 +1,6 @@
-import Hero from "@/components/Hero";
-import CategorySection from "@/components/CategorySection";
-import { getAllProducts, filterProductsByCategory, CATEGORIES } from "@/lib/shopify";
+import Hero from "@/_components/Hero";
+import CategorySection from "@/_components/CategorySection";
+import { getAllProducts, filterProductsByCategory, CATEGORIES } from "@/_lib/shopify";
 
 export const revalidate = 3600;
 

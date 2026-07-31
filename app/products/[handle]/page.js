@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getProductByHandle } from "@/lib/shopify";
+import { getProductByHandle } from "@/_lib/shopify";
 import ProductDetail from "./ProductDetail";
 
 export const revalidate = 3600;

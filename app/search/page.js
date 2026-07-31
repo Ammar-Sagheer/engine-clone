@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProductCard from "@/components/ProductCard";
-import { getAllProducts } from "@/lib/shopify";
+import ProductCard from "@/_components/ProductCard";
+import { getAllProducts } from "@/_lib/shopify";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");

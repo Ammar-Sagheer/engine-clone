@@ -1,3 +1,5 @@
+import fallbackData from "@/_data/products-fallback.json";
+
 const STORE_URL = "https://engine.com.pk";
 
 /**
@@ -6,12 +8,18 @@ const STORE_URL = "https://engine.com.pk";
  * since `next: { revalidate }` isn't honored the same way it is in prod.
  * Retry with backoff, honoring Retry-After when present.
  */
-async function fetchWithRetry(url, options = {}, retries = 4) {
+async function fetchWithRetry(url, options = {}, retries = 3) {
   for (let attempt = 0; attempt <= retries; attempt++) {
-    const res = await fetch(url, options);
+    let res;
+    try {
+      res = await fetch(url, options);
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
+      continue;
+    }
 
     if (res.status !== 429) return res;
-
     if (attempt === retries) return res;
 
     const retryAfter = Number(res.headers.get("retry-after"));
@@ -44,38 +52,54 @@ let allProductsCache = null;
 let allProductsCacheAt = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
+/**
+ * If the live store is unreachable or rate-limits us outright, fall back to
+ * the bundled products-fallback.json snapshot so the site still renders.
+ */
 export async function getAllProducts() {
   if (allProductsCache && Date.now() - allProductsCacheAt < CACHE_TTL_MS) {
     return allProductsCache;
   }
 
-  const all = [];
-  let page = 1;
+  try {
+    const all = [];
+    let page = 1;
 
-  while (true) {
-    const products = await getProducts({ limit: 250, page });
-    all.push(...products);
-    if (products.length < 250) break;
-    page += 1;
-    if (page > 10) break;
-    // small gap between page requests to stay under the rate limit
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    while (true) {
+      const products = await getProducts({ limit: 250, page });
+      all.push(...products);
+      if (products.length < 250) break;
+      page += 1;
+      if (page > 10) break;
+      // small gap between page requests to stay under the rate limit
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
+    allProductsCache = all;
+    allProductsCacheAt = Date.now();
+    return all;
+  } catch {
+    allProductsCache = fallbackData.products;
+    allProductsCacheAt = Date.now();
+    return fallbackData.products;
   }
-
-  allProductsCache = all;
-  allProductsCacheAt = Date.now();
-  return all;
 }
 
 export async function getProductByHandle(handle) {
-  const res = await fetchWithRetry(`${STORE_URL}/products/${handle}.json`, {
-    next: { revalidate: 3600 },
-  });
+  try {
+    const res = await fetchWithRetry(`${STORE_URL}/products/${handle}.json`, {
+      next: { revalidate: 3600 },
+    });
 
-  if (!res.ok) return null;
+    if (res.ok) {
+      const data = await res.json();
+      return data.product;
+    }
+  } catch {
+    // fall through to local fallback data below
+  }
 
-  const data = await res.json();
-  return data.product;
+  return fallbackData.products.find((p) => p.handle === handle) || null;
 }
 
 export function getProductPrice(product) {

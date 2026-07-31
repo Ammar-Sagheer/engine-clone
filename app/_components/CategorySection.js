@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ProductCard from "@/components/ProductCard";
+import ProductCard from "@/_components/ProductCard";
 
 export default function CategorySection({ title, slug, products }) {
   if (!products.length) return null;

@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { getProductPrice, formatPrice } from "@/lib/shopify";
-import { useCart } from "@/context/CartContext";
+import { getProductPrice, formatPrice } from "@/_lib/shopify";
+import { useCart } from "@/_context/CartContext";
 
 export default function ProductDetail({ product }) {
   const images = product.images || [];

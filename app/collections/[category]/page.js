@@ -1,5 +1,5 @@
-import ProductCard from "@/components/ProductCard";
-import { getAllProducts, filterProductsByCategory } from "@/lib/shopify";
+import ProductCard from "@/_components/ProductCard";
+import { getAllProducts, filterProductsByCategory } from "@/_lib/shopify";
 
 export const revalidate = 3600;
 

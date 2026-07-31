@@ -1,8 +1,8 @@
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { CartProvider } from "@/context/CartContext";
+import Header from "@/_components/Header";
+import Footer from "@/_components/Footer";
+import { CartProvider } from "@/_context/CartContext";
 
 const poppins = Poppins({
   variable: "--font-sans",

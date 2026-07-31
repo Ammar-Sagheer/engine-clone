@@ -1,5 +1,5 @@
 import Link from "next/link";
-import NewsletterForm from "@/components/NewsletterForm";
+import NewsletterForm from "@/_components/NewsletterForm";
 
 const SUPPORT_LINKS = [
   { label: "Track Order", href: "/track-order" },

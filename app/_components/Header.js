@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/_context/CartContext";
 
 const NAV_LINKS = [
   { label: "New In", href: "/collections/new-in" },
