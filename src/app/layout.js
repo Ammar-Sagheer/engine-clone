@@ -1,0 +1,30 @@
+import { Poppins } from "next/font/google";
+import "./globals.css";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { CartProvider } from "@/context/CartContext";
+
+const poppins = Poppins({
+  variable: "--font-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+export const metadata = {
+  title: "Engine Clone",
+  description: "A demo storefront clone built with Next.js and Tailwind CSS.",
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" className={`${poppins.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col">
+        <CartProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </CartProvider>
+      </body>
+    </html>
+  );
+}
