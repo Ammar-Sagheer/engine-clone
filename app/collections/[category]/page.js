@@ -10,20 +10,29 @@ function titleCase(str) {
     .join(" ");
 }
 
-export default async function CollectionPage({ params }) {
+export default async function CollectionPage({ params, searchParams }) {
   const { category } = await params;
+  const { tag } = await searchParams;
   const products = await getAllProducts();
 
-  const filtered =
+  let filtered =
     category === "new-in"
       ? [...products]
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
           .slice(0, 40)
       : filterProductsByCategory(products, category);
 
+  if (tag) {
+    filtered = filtered.filter((p) =>
+      (p.tags || []).some((t) => t.toLowerCase().includes(tag.toLowerCase()))
+    );
+  }
+
+  const heading = tag ? `${titleCase(category)} · ${tag}` : titleCase(category);
+
   return (
     <div className="container-page py-10">
-      <h1 className="text-2xl font-semibold mb-8">{titleCase(category)}</h1>
+      <h1 className="text-2xl font-semibold mb-8">{heading}</h1>
 
       {filtered.length === 0 ? (
         <p className="text-neutral-500">No products found in this collection.</p>
